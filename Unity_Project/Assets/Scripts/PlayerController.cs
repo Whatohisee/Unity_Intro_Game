@@ -50,6 +50,18 @@ public class PlayerController : MonoBehaviour
         playerCam.transform.localRotation = Quaternion.AngleAxis(camRotation.y, Vector3.left);
         transform.localRotation = Quaternion.AngleAxis(camRotation.x, Vector3.up);
 
+        if (Input.GetMouseButton(0) && camFire && currentClip > 0 && weaponID >= 0)
+        {
+            GameObject s = Instantiate(shot, weaponSlot.position, weaponSlot.rotation);
+            s.GetComponent<Rigidbody>().AddForce(playerCam.transform.forward * shotVel);
+            Destory(s, bulletlifespan);
+
+            canFire = false;
+            currentClip--;
+
+
+        }
+
         if (!sprinting && !sprintToggle && Input.GetKey(KeyCode.LeftShift))
             sprinting = true;
 
@@ -85,4 +97,33 @@ public class PlayerController : MonoBehaviour
             Destroy(collision.gameObject);
         }
     }
+
+    public void reloudClip()
+    {
+        if (currentClip >= clipSize)
+            return;
+
+        else
+        {
+            flout reloudCount = clipSize - currentClip;
+
+            if (currentAmmo < reloudCount)
+            {
+                currentClip += currentAmmo;
+                currentAmmo = 0;
+                return;
+            }
+
+            else
+            {
+                currentClip += reloudCount;
+                currentAmmo -= reloudCount;
+                return;
+            }
+        }
+
+
+    }
+
+
 }
