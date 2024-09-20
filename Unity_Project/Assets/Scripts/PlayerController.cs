@@ -7,6 +7,7 @@ public class PlayerController : MonoBehaviour
 {
     Rigidbody myRb;
     Camera playerCam;
+
     Vector2 camRotation;
 
     public int health = 5;
@@ -14,6 +15,18 @@ public class PlayerController : MonoBehaviour
     public int healthPickAmt = 5;
 
     public Transform weaponSlot;
+    public GameObject shot;
+    public float shotVel = 0;
+    public int weaponID = -0;
+    public int fireMode = 0;
+    public float currentClip = 0;
+    public float clipSize = 0;
+    public float maxAmmo = 0;
+    public float currentAmmo = 0;
+    public float reloadAmt = 0;
+    public float bulletLifspan = 0;
+    public bool canFire = true;
+
 
     public bool sprinting = false;
     public bool sprintToggle = false;
@@ -58,9 +71,12 @@ public class PlayerController : MonoBehaviour
 
             canFire = false;
             currentClip--;
-
+            StartCoroutine("cooldownFire");
 
         }
+
+        if (Input.GetKeyDown(KeyCode.R))
+            reloadClip();
 
         if (!sprinting && !sprintToggle && Input.GetKey(KeyCode.LeftShift))
             sprinting = true;
@@ -72,19 +88,19 @@ public class PlayerController : MonoBehaviour
 
         temp.x = Input.GetAxisRaw("Horizontal") * speed;
         temp.z = Input.GetAxisRaw("Vertical") * speed;
-        
+
         if (sprinting)
             temp.z *= sprintmult;
 
         if (sprinting && !sprintToggle && Input.GetAxisRaw("Vertical") <= 0)
-             sprinting = false;
+            sprinting = false;
 
         if (sprinting && !sprintToggle && Input.GetKeyUp(KeyCode.LeftShift))
             sprinting = false;
 
         if (Input.GetKeyDown(KeyCode.Space) && Physics.Raycast(transform.position, -transform.up, grounddetection))
-           temp.y = jumphight;
-       
+            temp.y = jumphight;
+
         myRb.velocity = (transform.forward * temp.z) + (transform.right * temp.x) + (transform.up * temp.y);
     }
     private void OnCollisionEnter(Collision collision)
@@ -96,8 +112,49 @@ public class PlayerController : MonoBehaviour
             else health += healthPickAmt;
             Destroy(collision.gameObject);
         }
-    }
+        if ((collision.gameObject.tag == "ammoPickup") && currentAmmo < maxAmmo)
+        {
+            if (currentAmmo + reloadAmt > maxAmmo)
+                currentAmmo = maxAmmo;
 
+            else
+                currentAmmo += reloadAmt;
+
+            Destroy(collision.gameObject);
+
+        }
+    }   
+    
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.tag == "weapon")
+        {
+            other.transform.SetPositionAndRotation(weaponSlot.position, weaponSlot.rotation);
+
+            other.transform.SetParent(weaponSlot);
+
+            switch(other.gameObject.name)
+            {
+                case "weapon":
+                    weaponID = 0;
+                    shotVel = 10000;
+                    fireMode = 0;
+                    fireRate = 0.1f;
+                    currentClip = 20;
+                    clipSize = 400;
+                    maxAmmo = 200;
+                    reloadAmt = 20;
+                    bulletLifespan = .5f;
+                    break;
+
+                default:
+                    break;
+            }
+        }
+    }    
+             
+         
     public void reloudClip()
     {
         if (currentClip >= clipSize)
@@ -121,9 +178,12 @@ public class PlayerController : MonoBehaviour
                 return;
             }
         }
-
-
     }
-
-
+    
+    IEnumerator cooldownFire()
+    {
+        yield return new WaitForSeconds(fireRate);
+        canFire = true;
+    }
+    
 }
