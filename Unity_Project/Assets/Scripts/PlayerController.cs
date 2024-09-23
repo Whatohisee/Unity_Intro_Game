@@ -17,35 +17,38 @@ public class PlayerController : MonoBehaviour
     public Transform weaponSlot;
     public GameObject shot;
     public float shotVel = 0;
-    public int weaponID = -0;
+    public int weaponID = -1;
     public int fireMode = 0;
+    public float fireRate = 0;
     public float currentClip = 0;
     public float clipSize = 0;
     public float maxAmmo = 0;
     public float currentAmmo = 0;
     public float reloadAmt = 0;
-    public float bulletLifspan = 0;
+    public float bulletLifespan = 0;
     public bool canFire = true;
 
 
     public bool sprinting = false;
-    public bool sprintToggle = false;
-    public float sprintmult = 1.5f;
     public float speed = 10f;
-    public float jumphight = 5f;
+    public float sprintMult = 1.5f;
+    public float jumpHeight = 5f;
+    public float groundDetection = 1f;
 
+    public bool sprintToggle = false;
     public float mouseSensitivity = 2.0f;
     public float Xsensitivity = 2.0f;
     public float Ysensitivity = 2.0f;
-    public float grounddetection = 1f;
+    public float camRotationLimit = 90f;
+
 
     // Start is called before the first frame update
     void Start()
     {
         myRb = GetComponent<Rigidbody>();
         playerCam = gameObject.transform.GetChild(0).GetComponent<Camera>();
-        camRotation = Vector2.zero;
 
+        camRotation = Vector2.zero;
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
 
@@ -58,48 +61,50 @@ public class PlayerController : MonoBehaviour
         camRotation.x += Input.GetAxisRaw("Mouse X") * mouseSensitivity;
         camRotation.y += Input.GetAxisRaw("Mouse Y") * mouseSensitivity;
 
-        camRotation.y = Mathf.Clamp(camRotation.y, -90, 90);
+       
+        camRotation.y = Mathf.Clamp(camRotation.y, -camRotationLimit, camRotationLimit);
 
+      
         playerCam.transform.localRotation = Quaternion.AngleAxis(camRotation.y, Vector3.left);
         transform.localRotation = Quaternion.AngleAxis(camRotation.x, Vector3.up);
 
-        if (Input.GetMouseButton(0) && camFire && currentClip > 0 && weaponID >= 0)
+        if (Input.GetMouseButton(0) && canFire && currentClip > 0 && weaponID >= 0)
         {
             GameObject s = Instantiate(shot, weaponSlot.position, weaponSlot.rotation);
             s.GetComponent<Rigidbody>().AddForce(playerCam.transform.forward * shotVel);
-            Destory(s, bulletlifespan);
+            Destroy(s, bulletLifespan);
 
             canFire = false;
             currentClip--;
             StartCoroutine("cooldownFire");
-
         }
 
         if (Input.GetKeyDown(KeyCode.R))
             reloadClip();
 
-        if (!sprinting && !sprintToggle && Input.GetKey(KeyCode.LeftShift))
+
+       
+        if ((!sprinting) && ((!sprintToggle && Input.GetKey(KeyCode.LeftShift)) || (sprintToggle && Input.GetKey(KeyCode.LeftShift) && (Input.GetAxisRaw("Vertical") > 0))))
             sprinting = true;
 
-        if (sprinting && sprintToggle && (Input.GetAxisRaw("Vertical") > 0) && Input.GetKey(KeyCode.LeftShift))
-            sprinting = true;
 
+        
         Vector3 temp = myRb.velocity;
 
         temp.x = Input.GetAxisRaw("Horizontal") * speed;
         temp.z = Input.GetAxisRaw("Vertical") * speed;
 
         if (sprinting)
-            temp.z *= sprintmult;
+        {
+            temp.z *= sprintMult;
 
-        if (sprinting && !sprintToggle && Input.GetAxisRaw("Vertical") <= 0)
-            sprinting = false;
+            if ((sprintToggle && (Input.GetAxisRaw("Vertical") <= 0)) || (!sprintToggle && Input.GetKeyUp(KeyCode.LeftShift)))
+                sprinting = false;
+        }
 
-        if (sprinting && !sprintToggle && Input.GetKeyUp(KeyCode.LeftShift))
-            sprinting = false;
-
-        if (Input.GetKeyDown(KeyCode.Space) && Physics.Raycast(transform.position, -transform.up, grounddetection))
-            temp.y = jumphight;
+        
+        if (Input.GetKeyDown(KeyCode.Space) && Physics.Raycast(transform.position, -transform.up, groundDetection))
+            temp.y = jumpHeight;
 
         myRb.velocity = (transform.forward * temp.z) + (transform.right * temp.x) + (transform.up * temp.y);
     }
@@ -152,19 +157,19 @@ public class PlayerController : MonoBehaviour
                     break;
             }
         }
-    }    
-             
-         
-    public void reloudClip()
+    }
+
+
+    public void reloadClip()
     {
         if (currentClip >= clipSize)
             return;
 
         else
         {
-            flout reloudCount = clipSize - currentClip;
+            float reloadCount = clipSize - currentClip;
 
-            if (currentAmmo < reloudCount)
+            if (currentAmmo < reloadCount)
             {
                 currentClip += currentAmmo;
                 currentAmmo = 0;
@@ -173,17 +178,16 @@ public class PlayerController : MonoBehaviour
 
             else
             {
-                currentClip += reloudCount;
-                currentAmmo -= reloudCount;
+                currentClip += reloadCount;
+                currentAmmo -= reloadCount;
                 return;
             }
         }
     }
-    
+
     IEnumerator cooldownFire()
     {
         yield return new WaitForSeconds(fireRate);
         canFire = true;
     }
-    
 }
