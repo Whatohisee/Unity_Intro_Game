@@ -27,6 +27,7 @@ public class PlayerController : MonoBehaviour
     public float reloadAmt = 0;
     public float bulletLifespan = 0;
     public bool canFire = true;
+    public bool takenDamage = false;
 
 
     public bool sprinting = false;
@@ -46,7 +47,7 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         myRb = GetComponent<Rigidbody>();
-        playerCam = gameObject.transform.GetChild(0).GetComponent<Camera>();
+        playerCam = Camera.main;
 
         camRotation = Vector2.zero;
         Cursor.visible = false;
@@ -61,11 +62,11 @@ public class PlayerController : MonoBehaviour
         camRotation.x += Input.GetAxisRaw("Mouse X") * mouseSensitivity;
         camRotation.y += Input.GetAxisRaw("Mouse Y") * mouseSensitivity;
 
-       
+
         camRotation.y = Mathf.Clamp(camRotation.y, -camRotationLimit, camRotationLimit);
 
-      
-        playerCam.transform.localRotation = Quaternion.AngleAxis(camRotation.y, Vector3.left);
+
+        playerCam.transform.localRotation = Quaternion.Euler(-camRotation.y, camRotation.x, 0);
         transform.localRotation = Quaternion.AngleAxis(camRotation.x, Vector3.up);
 
         if (Input.GetMouseButton(0) && canFire && currentClip > 0 && weaponID >= 0)
@@ -83,12 +84,12 @@ public class PlayerController : MonoBehaviour
             reloadClip();
 
 
-       
+
         if ((!sprinting) && ((!sprintToggle && Input.GetKey(KeyCode.LeftShift)) || (sprintToggle && Input.GetKey(KeyCode.LeftShift) && (Input.GetAxisRaw("Vertical") > 0))))
             sprinting = true;
 
 
-        
+
         Vector3 temp = myRb.velocity;
 
         temp.x = Input.GetAxisRaw("Horizontal") * speed;
@@ -102,7 +103,7 @@ public class PlayerController : MonoBehaviour
                 sprinting = false;
         }
 
-        
+
         if (Input.GetKeyDown(KeyCode.Space) && Physics.Raycast(transform.position, -transform.up, groundDetection))
             temp.y = jumpHeight;
 
@@ -128,8 +129,8 @@ public class PlayerController : MonoBehaviour
             Destroy(collision.gameObject);
 
         }
-    }   
-    
+    }
+
 
     private void OnTriggerEnter(Collider other)
     {
@@ -139,7 +140,7 @@ public class PlayerController : MonoBehaviour
 
             other.transform.SetParent(weaponSlot);
 
-            switch(other.gameObject.name)
+            switch (other.gameObject.name)
             {
                 case "weapon":
                     weaponID = 0;
@@ -189,5 +190,6 @@ public class PlayerController : MonoBehaviour
     {
         yield return new WaitForSeconds(fireRate);
         canFire = true;
-    }
+    } 
+    
 }
