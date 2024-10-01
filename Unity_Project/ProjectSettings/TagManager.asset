@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Pickup
   - weapon
+  - bullet
   layers:
   - Default
   - TransparentFX
