@@ -68,7 +68,8 @@ public class PlayerController : MonoBehaviour
     {
         if (!gm.isPaused)
         {
-            playerCam.transform.position = camHolder.position;
+            if (weaponSlot.childCount > 0)
+                weaponSlot.GetChild(0);
 
             camRotation.x += Input.GetAxisRaw("Mouse X") * mouseSensitivity;
             camRotation.y += Input.GetAxisRaw("Mouse Y") * mouseSensitivity;
@@ -77,7 +78,7 @@ public class PlayerController : MonoBehaviour
             camRotation.y = Mathf.Clamp(camRotation.y, -camRotationLimit, camRotationLimit);
 
 
-            playerCam.transform.rotation = Quaternion.Euler(-camRotation.y, camRotation.x, 0);
+            camHolder.transform.rotation = Quaternion.Euler(-camRotation.y, camRotation.x, 0);
             transform.localRotation = Quaternion.AngleAxis(camRotation.x, Vector3.up);
 
             if (Input.GetMouseButton(0) && canFire && currentClip > 0 && weaponID >= 0)
