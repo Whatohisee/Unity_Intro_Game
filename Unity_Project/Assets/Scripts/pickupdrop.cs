@@ -23,13 +23,13 @@ public class pickupdrop : MonoBehaviour
     {
         //Check if player is in range and "E" is pressed
         Vector3 distanceToPlayer = player.position - transform.position;
-        if (!equipped && distanceToPlayer.magnitude <= pickUpRange && Input.GetKeyDown(KeyCode.E) && !slotFull) pickUp();
+        if (!equipped && distanceToPlayer.magnitude <= pickUpRange && Input.GetKeyDown(KeyCode.E) && !slotFull) PickUp();
 
         //Drop if equipped and "Q" is pressed
-        if (equipped && Input.GetKeyDown(KeyCode.Q)) drop();
+        if (equipped && Input.GetKeyDown(KeyCode.Q)) Drop();
     }
 
-    private void pickUp()
+    private void PickUp()
     {
         equipped = true;
         slotFull = true;
@@ -42,7 +42,7 @@ public class pickupdrop : MonoBehaviour
         gunScript.enabled = true;
     }
    
-    private void drop()
+    private void Drop()
     {
         equipped = false;
         slotFull = false;
